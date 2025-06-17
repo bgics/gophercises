@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"strings"
 	"time"
 )
 
@@ -24,7 +25,7 @@ func Quiz(questions []Question, in io.Reader, out io.Writer, timeLimit time.Dura
 			fmt.Fprintf(out, "Problem #%d: %s = ", i+1, q.Problem)
 			scanner.Scan()
 
-			if scanner.Text() == q.Solution {
+			if strings.TrimSpace(scanner.Text()) == strings.TrimSpace(q.Solution) {
 				correctAnswers += 1
 			}
 		}
@@ -72,7 +73,7 @@ func parseQuestions(records [][]string) ([]Question, error) {
 
 		q := Question{
 			Problem:  row[0],
-			Solution: row[1],
+			Solution: strings.TrimSpace(row[1]),
 		}
 		questions = append(questions, q)
 	}

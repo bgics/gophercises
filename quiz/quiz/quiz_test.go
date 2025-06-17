@@ -14,8 +14,8 @@ import (
 func TestQuestionsFromCSV(t *testing.T) {
 	const (
 		csvFileName = "qna.csv"
-		csvFileData = `5+5,10
-7+3,10
+		csvFileData = `5+5,  10
+7+3,10  
 `
 	)
 
@@ -49,7 +49,7 @@ func TestQuiz(t *testing.T) {
 
 	t.Run("give answers before timer", func(t *testing.T) {
 		input := DelayedReader{
-			lines: []string{"10", "10"},
+			lines: []string{" 10", "10"},
 			delay: 1 * time.Millisecond,
 		}
 
