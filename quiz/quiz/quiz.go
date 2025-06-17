@@ -17,29 +17,30 @@ type Question struct {
 
 func Quiz(questions []Question, in io.Reader, out io.Writer, timeLimit time.Duration) int {
 	scanner := bufio.NewScanner(in)
-	correctAnswers := 0
+	timer := time.NewTimer(timeLimit)
 
-	done := make(chan struct{})
-	go func() {
-		for i, q := range questions {
-			fmt.Fprintf(out, "Problem #%d: %s = ", i+1, q.Problem)
+	correct := 0
+	for i, q := range questions {
+		fmt.Fprintf(out, "Problem #%d: %s = ", i+1, q.Problem)
+
+		answerChan := make(chan string, 1)
+		go func() {
 			scanner.Scan()
+			answerChan <- scanner.Text()
+		}()
 
-			if strings.TrimSpace(scanner.Text()) == strings.TrimSpace(q.Solution) {
-				correctAnswers += 1
+		select {
+		case <-timer.C:
+			return correct
+		case answer := <-answerChan:
+			if strings.TrimSpace(answer) == strings.TrimSpace(q.Solution) {
+				correct += 1
 			}
 		}
-
-		close(done)
-	}()
-
-	select {
-	case <-done:
-	case <-time.After(timeLimit):
-		fmt.Fprintf(out, "\n")
 	}
 
-	return correctAnswers
+	timer.Stop()
+	return correct
 }
 
 func QuestionsFromCSV(fileSystem fs.FS, fileName string) ([]Question, error) {
