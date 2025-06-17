@@ -17,6 +17,7 @@ var (
 )
 
 func main() {
+	log.SetFlags(0)
 	flag.Parse()
 
 	questions, err := quiz.QuestionsFromCSV(os.DirFS("."), *csvFlag)
