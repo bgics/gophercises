@@ -30,7 +30,7 @@ func main() {
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 	timeLimit := time.Duration(*limitFlag) * time.Second
-	correctAnswers := quiz.Quiz(questions, os.Stdin, os.Stdout, timeLimit)
+	correct := quiz.Quiz(questions, os.Stdin, os.Stdout, timeLimit)
 
-	fmt.Printf("You scored %d out of %d.\n", correctAnswers, len(questions))
+	fmt.Printf("You scored %d out of %d.\n", correct, len(questions))
 }
