@@ -2,10 +2,11 @@ package quiz_test
 
 import (
 	"bytes"
+	"io"
 	"slices"
-	"strings"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/bgics/gophercises/quiz/quiz"
 )
@@ -44,20 +45,54 @@ func TestQuiz(t *testing.T) {
 		{"7+3", "10"},
 	}
 
-	input := `10
-10
-`
-	buf := bytes.Buffer{}
-	r := strings.NewReader(input)
+	output := bytes.Buffer{}
 
-	got := quiz.Quiz(questions, r, &buf)
-	want := 2
+	t.Run("give answers before timer", func(t *testing.T) {
+		input := DelayedReader{
+			lines: []string{"10", "10"},
+			delay: 1 * time.Millisecond,
+		}
 
-	if got != want {
-		t.Errorf("got %d correct answers, want %d correct answers", got, want)
-	}
+		got := quiz.Quiz(questions, &input, &output, 5*time.Millisecond)
+
+		want := 2
+
+		if got != want {
+			t.Errorf("got %d correct answers, want %d correct answers", got, want)
+		}
+	})
+	t.Run("timer should run out", func(t *testing.T) {
+		input := DelayedReader{
+			lines: []string{"10", "10"},
+			delay: 3 * time.Millisecond,
+		}
+
+		got := quiz.Quiz(questions, &input, &output, 5*time.Millisecond)
+
+		want := 1
+
+		if got != want {
+			t.Errorf("got %d correct answers, want %d correct answers", got, want)
+		}
+	})
 }
 
-func TestTimedQuiz(t *testing.T) {
+type DelayedReader struct {
+	lines []string
+	index int
+	delay time.Duration
+}
 
+func (r *DelayedReader) Read(p []byte) (int, error) {
+	if r.index >= len(r.lines) {
+		return 0, io.EOF
+	}
+
+	time.Sleep(r.delay)
+
+	line := r.lines[r.index] + "\n"
+	n := copy(p, []byte(line))
+	r.index += 1
+
+	return n, nil
 }

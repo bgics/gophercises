@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"time"
 )
 
 type Question struct {
@@ -13,17 +14,28 @@ type Question struct {
 	Solution string
 }
 
-func Quiz(questions []Question, in io.Reader, out io.Writer) int {
+func Quiz(questions []Question, in io.Reader, out io.Writer, timeLimit time.Duration) int {
 	scanner := bufio.NewScanner(in)
 	correctAnswers := 0
 
-	for i, q := range questions {
-		fmt.Fprintf(out, "Problem #%d: %s = ", i+1, q.Problem)
-		scanner.Scan()
+	done := make(chan struct{})
+	go func() {
+		for i, q := range questions {
+			fmt.Fprintf(out, "Problem #%d: %s = ", i+1, q.Problem)
+			scanner.Scan()
 
-		if scanner.Text() == q.Solution {
-			correctAnswers += 1
+			if scanner.Text() == q.Solution {
+				correctAnswers += 1
+			}
 		}
+
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(timeLimit):
+		fmt.Fprintf(out, "\n")
 	}
 
 	return correctAnswers
